@@ -49,12 +49,19 @@ def validate_line(line: str) -> None:
 
 
 def write_entry(line: str) -> str:
-    """Write the validated line to /output/entry.txt and return the path."""
+    """Write the validated line to /output/entry.txt and return the path.
+
+    The write is atomic: the line goes to a temporary file in the same
+    directory first, then replaces the entry, so a reader never sees a
+    half-written line.
+    """
     validate_line(line)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     entry_path = os.path.join(OUTPUT_DIR, "entry.txt")
-    with open(entry_path, "w", encoding="utf-8") as handle:
+    tmp_path = entry_path + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as handle:
         handle.write(line)
+    os.replace(tmp_path, entry_path)
     return entry_path
 
 
